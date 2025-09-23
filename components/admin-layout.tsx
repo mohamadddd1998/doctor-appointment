@@ -23,17 +23,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="lg:hidden flex items-center justify-between h-16 px-4 border-b border-sidebar-border bg-sidebar">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">
-                A
-              </span>
-            </div>
-            <span className="font-semibold text-sidebar-foreground">
-              Admin Panel
-            </span>
-          </div>
+        <div className="lg:hidden flex items-center justify-between
+         h-16 px-4 border-b border-sidebar-border bg-sidebar">
+          <img src={"/logo.png"} className="w-48" />
 
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
