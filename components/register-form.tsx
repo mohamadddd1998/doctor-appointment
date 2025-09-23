@@ -13,9 +13,27 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/lib/auth";
-import { AlertCircle, ArrowLeft, ClipboardCheck, RefreshCcw } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CalendarIcon,
+  ClipboardCheck,
+  RefreshCcw,
+} from "lucide-react";
 import { useState } from "react";
 import { useCaptcha } from "@/hooks/use-captcha";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "./ui/calendar";
+import { format } from "date-fns";
+import { PersianCalendar } from "./ui/persian-calendar";
 
 const phoneSchema = Yup.object({
   phone: Yup.string()
@@ -30,21 +48,20 @@ const otpSchema = Yup.object({
     .required("کد تایید الزامی است"),
 });
 
-export function LoginForm() {
+export function RegisterForm() {
   const { sendOTP, verifyOTP, isLoading } = useAuth();
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const router = useRouter();
-  const data = useCaptcha()
-  console.log(data , 'data');
-  
+  const data = useCaptcha();
+  console.log(data, "data");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg border-none">
+      <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="font-bold text-xl flex flex-col items-center gap-4">
-            <img src={'/logo.png'} className="w-72" />
-            ورود به پنل نوبت دهی
+          <CardTitle className="font-bold text-gray-500 text-xl flex flex-col items-center gap-4">
+            <img src={"/logo.png"} className="w-72" />
+            {/* ثبت نام */}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -52,7 +69,10 @@ export function LoginForm() {
             initialValues={{
               phone: "",
               otp: "",
+              gender: "",
               error: "",
+              password: '',
+              date: undefined as Date | undefined,
             }}
             validateOnBlur={false}
             validateOnChange={false}
@@ -82,16 +102,127 @@ export function LoginForm() {
               <Form className="space-y-4">
                 {step === "phone" && (
                   <>
+                    <div className="flex gap-2">
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="firstName"> نام : </Label>
+                        <Field name="firstName">
+                          {({ field }: any) => (
+                            <Input {...field} id="firstName" />
+                          )}
+                        </Field>
+                        {errors.phone && touched.phone && (
+                          <div className="flex items-center gap-2 text-destructive text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.phone}
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="lastName"> نام خانوادگی : </Label>
+                        <Field name="lastName">
+                          {({ field }: any) => (
+                            <Input {...field} id="lastName" />
+                          )}
+                        </Field>
+                        {errors.phone && touched.phone && (
+                          <div className="flex items-center gap-2 text-destructive text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.phone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="mobileNumber ">شماره تلفن : </Label>
+                        <Field name="mobileNumber ">
+                          {({ field }: any) => (
+                            <Input
+                              {...field}
+                              id="mobileNumber"
+                              type="tel"
+                              dir="ltr"
+                              maxLength={11}
+                            />
+                          )}
+                        </Field>
+                        {errors.phone && touched.phone && (
+                          <div className="flex items-center gap-2 text-destructive text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.phone}
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="fatherName"> نام پدر : </Label>
+                        <Field name="fatherName">
+                          {({ field }: any) => (
+                            <Input {...field} id="fatherName" />
+                          )}
+                        </Field>
+                        {errors.phone && touched.phone && (
+                          <div className="flex items-center gap-2 text-destructive text-sm">
+                            <AlertCircle className="h-4 w-4" />
+                            {errors.phone}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="gender"> جنسیت :</Label>
+                        <Select
+                          value={values.gender}
+                          onValueChange={(value) =>
+                            setFieldValue("gender", value)
+                          }
+                          dir="rtl"
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              { value: "0", label: "زن" },
+                              { value: "1", label: "مرد" },
+                            ].map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {errors.gender && touched.gender && (
+                          <p className="text-sm text-destructive">
+                            {errors.gender}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2 w-1/2">
+                        <Label htmlFor="date">تاریخ تولد :</Label>
+                        <PersianCalendar
+                          value={values.date}
+                          onChange={(date) => setFieldValue("date", date)}
+                        />
+                        {errors.date && touched.date && (
+                          <p className="text-sm text-destructive">
+                            {errors.date}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">شماره تلفن : </Label>
-                      <Field name="phone">
+                      <Label htmlFor="password ">رمز عبور : </Label>
+                      <Field name="password ">
                         {({ field }: any) => (
                           <Input
                             {...field}
-                            id="phone"
-                            type="tel"
+                            id="password"
+                            type="password"
                             dir="ltr"
-                            maxLength={11}
                           />
                         )}
                       </Field>
@@ -102,6 +233,7 @@ export function LoginForm() {
                         </div>
                       )}
                     </div>
+
                     <div className="space-y-2">
                       <Field name="captcha">
                         {({ field }: any) => (
@@ -109,15 +241,15 @@ export function LoginForm() {
                             <Input
                               {...field}
                               id="phone"
-                              type="tel"
-                              dir="ltr"
-                              maxLength={11}
                               className=" flex-1 placeholder:text-[10px] placeholder:text-right"
                               placeholder="حاصل جمع اعداد را وارد نمایید"
                             />
                             <div className=" top-0 left-0 h-9 flex gap-2 items-center shrink-0">
                               <img src="/captcha.PNG" className="h-full" />
-                               <RefreshCcw size={20} className="text-primary cursor-pointer" />
+                              <RefreshCcw
+                                size={20}
+                                className="text-primary cursor-pointer"
+                              />
                             </div>
                           </div>
                         )}
