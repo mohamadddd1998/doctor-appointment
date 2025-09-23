@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import url("./font.css");
+@import "./font.css";
 
 :root {
   /* Updated to use only light theme colors with better contrast */
@@ -43,7 +43,6 @@
 /* Removed dark mode styles completely */
 
 @theme inline {
-  --font-YekanBakh: YekanBakh;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);

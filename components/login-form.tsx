@@ -39,8 +39,7 @@ export function LoginForm() {
       <Card className="w-full max-w-lg border-none">
         <CardHeader className="text-center">
           <CardTitle className="font-bold text-xl flex flex-col items-center gap-4">
-            <ClipboardCheck size={48} className="text-primary" />
-      
+            <img src={'/logo.png'} className="w-72" />
             ورود به پنل نوبت دهی
           </CardTitle>
         </CardHeader>
