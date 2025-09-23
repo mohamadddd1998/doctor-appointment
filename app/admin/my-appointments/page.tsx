@@ -187,44 +187,27 @@ export default function MyAppointmentsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">گزارش نوبت های من</h1>
-          <p className="text-muted-foreground">مشاهده و مدیریت تمام نوبت‌های ثبت شده</p>
-        </div>
-
         <Card>
           <CardHeader>
             <CardTitle>فیلتر و جستجو</CardTitle>
-            <CardDescription>برای یافتن نوبت مورد نظر از فیلترها استفاده کنید</CardDescription>
+            <CardDescription>برای یافتن نوبت مورد نظر از فیلترها استفاده کنید.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="جستجو بر اساس نام بیمار یا شماره تلفن..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div className="w-full md:w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="وضعیت" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">همه وضعیت‌ها</SelectItem>
-                    <SelectItem value="confirmed">تایید شده</SelectItem>
-                    <SelectItem value="pending">در انتظار</SelectItem>
-                    <SelectItem value="completed">انجام شده</SelectItem>
-                    <SelectItem value="cancelled">لغو شده</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Input
+                placeholder="نام بیمار"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Input
+                placeholder="شماره تلفن"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Button>
+                جستجو
+                <Search />
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -234,87 +217,77 @@ export default function MyAppointmentsPage() {
             <CardTitle>لیست نوبت‌ها ({filteredAppointments.length} نوبت)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">نام بیمار</TableHead>
+                  <TableHead className="text-right">شماره تلفن</TableHead>
+                  <TableHead className="text-right">تاریخ</TableHead>
+                  <TableHead className="text-right">ساعت</TableHead>
+                  <TableHead className="text-right">وضعیت</TableHead>
+                  <TableHead className="text-right">عملیات</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedAppointments.length === 0 ? (
                   <TableRow>
-                    <TableHead className="text-right">نام بیمار</TableHead>
-                    <TableHead className="text-right">شماره تلفن</TableHead>
-                    <TableHead className="text-right">خدمات</TableHead>
-                    <TableHead className="text-right">تاریخ</TableHead>
-                    <TableHead className="text-right">ساعت</TableHead>
-                    <TableHead className="text-right">وضعیت</TableHead>
-                    <TableHead className="text-right">یادداشت</TableHead>
-                    <TableHead className="text-right">عملیات</TableHead>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      هیچ نوبتی یافت نشد
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedAppointments.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        هیچ نوبتی یافت نشد
+                ) : (
+                  paginatedAppointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          {appointment.patientName}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          {appointment.phoneNumber}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          {appointment.date}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          {appointment.time}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[appointment.status as keyof typeof statusColors]}>
+                          {statusLabels[appointment.status as keyof typeof statusLabels]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700" onClick={() => handleEdit(appointment)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(appointment)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    paginatedAppointments.map((appointment) => (
-                      <TableRow key={appointment.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            {appointment.patientName}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            {appointment.phoneNumber}
-                          </div>
-                        </TableCell>
-                        <TableCell>{appointment.service}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {appointment.date}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            {appointment.time}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={statusColors[appointment.status as keyof typeof statusColors]}>
-                            {statusLabels[appointment.status as keyof typeof statusLabels]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 max-w-32">
-                            <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="truncate text-sm">{appointment.notes}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" onClick={() => handleEdit(appointment)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(appointment)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">

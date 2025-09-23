@@ -32,7 +32,7 @@ export default function NewAppointmentPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <Card className="border-none">
+        <Card>
           <CardHeader>
             <CardTitle>نوبت های موجود</CardTitle>
             <CardDescription>

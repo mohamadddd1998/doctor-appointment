@@ -32,28 +32,6 @@
       "status": "completed",
       "notes": "جلسه درمان",
       "createdAt": "2024-01-17T14:00:00Z"
-    },
-    {
-      "id": "a4c7",
-      "patientName": "",
-      "phoneNumber": "",
-      "service": "",
-      "date": "2001/02/01",
-      "time": "",
-      "status": "pending",
-      "notes": "",
-      "createdAt": "2025-09-23T16:19:53.896Z"
-    },
-    {
-      "id": "fa6c",
-      "patientName": "",
-      "phoneNumber": "",
-      "service": "",
-      "date": "2001/02/01",
-      "time": "time-2",
-      "status": "pending",
-      "notes": "",
-      "createdAt": "2025-09-23T16:21:39.498Z"
     }
   ],
   "users": [

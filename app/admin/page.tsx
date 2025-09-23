@@ -63,7 +63,7 @@ export default function AdminDashboard() {
             </Card>
           ))}
         </div>
-        <Card className="col-span-4 border-none">
+        <Card className="col-span-4">
           <CardHeader>
             <CardTitle>نمودار نوبت دهی</CardTitle>
           </CardHeader>

@@ -89,7 +89,6 @@ export function LoginForm() {
                             type="tel"
                             dir="ltr"
                             maxLength={11}
-                            className="!border-gray-200"
                           />
                         )}
                       </Field>
@@ -101,7 +100,7 @@ export function LoginForm() {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Field name="phone">
+                      <Field name="captcha">
                         {({ field }: any) => (
                           <div className="relative flex items-center gap-2">
                             <Input
@@ -110,7 +109,7 @@ export function LoginForm() {
                               type="tel"
                               dir="ltr"
                               maxLength={11}
-                              className="!border-gray-200 flex-1 placeholder:text-[10px] placeholder:text-right"
+                              className=" flex-1 placeholder:text-[10px] placeholder:text-right"
                               placeholder="حاصل جمع اعداد را وارد نمایید"
                             />
                             <div className=" top-0 left-0 h-9 flex gap-2 items-center shrink-0">
