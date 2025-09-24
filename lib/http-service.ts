@@ -7,6 +7,22 @@ interface HttpOptions {
   headers?: Record<string, string>;
 }
 
+const handleApiError = async (response: Response) => {
+  const errorData = await response.json().catch(() => null);
+
+  if (errorData?.errors) {
+    let errText = "";
+    Object.keys(errorData.errors).forEach((key: string, index: number) => {
+      errText += errorData.errors[key].join(" - ");
+      errText +=
+        Object.keys(errorData.errors).length === index + 1 ? "  " : " - ";
+    });
+    throw new Error(errText);
+  }
+
+  throw new Error(`خطا در درخواست - کد: ${response.status}`);
+};
+
 export const httpService = async <T>({
   url,
   method = "GET",
@@ -29,20 +45,7 @@ export const httpService = async <T>({
     );
 
     if (!response.ok) {
-      const errorData = await response.json();
-
-      // هندل خطاهای برگشتی سرور
-      if (errorData?.errors) {
-        let errText = "";
-        Object.keys(errorData.errors).forEach((key: string, index: number) => {
-          errText += errorData.errors[key].join(" - ");
-          errText +=
-            Object.keys(errorData.errors).length === index + 1 ? "  " : " - ";
-        });
-        throw new Error(errText);
-      }
-
-      throw new Error(`خطا در درخواست - کد: ${response.status}`);
+      await handleApiError(response);
     }
 
     return await response.json();

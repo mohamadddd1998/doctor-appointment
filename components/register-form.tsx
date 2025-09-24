@@ -20,7 +20,8 @@ import Captcha from "./partials/captcha";
 import { toast } from "sonner";
 import TextInputField from "./partials/text-input-field";
 import ErrorMessage from "./partials/error-message";
-import { register } from "@/actions/auth";
+import { useMutation } from "@tanstack/react-query";
+import { httpService } from "@/lib/http-service";
 
 export function RegisterForm() {
   const { isLoading } = useAuth();
@@ -48,9 +49,24 @@ export function RegisterForm() {
     captcha: Yup.string().required(" کپچا الزامی است"),
   });
 
-  const submitHandler = async (values: FormikValues) => {
-    console.log(values, "values");
+  const registerMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return await httpService({
+        url: "/Account/Register",
+        method: "POST",
+        payload,
+      });
+    },
+    onSuccess: () => {
+      toast.success("ثبت نام با موفقیت انجام شد");
+      router.push("/login");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "خطا در ثبت نام");
+    },
+  });
 
+  const submitHandler = async (values: FormikValues) => {
     const payload = {
       firstName: values?.firstName,
       lastName: values?.lastName,
@@ -59,17 +75,32 @@ export function RegisterForm() {
       gender: Number(values?.gender),
       captcha: values?.captcha,
     };
-    try {
-      const result = (await register(payload)) as any;
-      if (result?.success) {
-        toast.success("ثبت نام با موفقیت انجام شد");
-        router.push("/login");
-        return;
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    registerMutation.mutate(payload);
   };
+
+  // const submitHandler = async (values: FormikValues) => {
+  //   console.log(values, "values");
+
+  //   const payload = {
+  //     firstName: values?.firstName,
+  //     lastName: values?.lastName,
+  //     nationalCode: values?.nationalCode?.toString(),
+  //     mobileNumber: "0" + values?.mobileNumber?.toString(),
+  //     gender: Number(values?.gender),
+  //     captcha: values?.captcha,
+  //   };
+  //   try {
+  //     const result = (await register(payload)) as any;
+  //     if (result?.success) {
+  //       toast.success("ثبت نام با موفقیت انجام شد");
+  //       router.push("/login");
+  //       return;
+  //     }
+  //   } catch (error: any) {
+  //     toast.error(error.message);
+  //   }
+  // };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">

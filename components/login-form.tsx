@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Captcha from "./partials/captcha";
 import { authApi } from "@/lib/api";
@@ -20,11 +20,23 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import TextInputField from "./partials/text-input-field";
 import ErrorMessage from "./partials/error-message";
+import { useCountdown } from "@/hooks/use-countdown";
 
 export function LoginForm() {
   const { isLoading } = useAuth();
-  const [step, setStep] = useState<"mobile" | "otp">("mobile");
+  const [step, setStep] = useState<"mobile" | "otp">("otp");
   const router = useRouter();
+
+  const [counter, { startCountdown, resetCountdown }] = useCountdown({
+    countStart: 240,
+    intervalMs: 1000,
+    countStop: 0,
+    isIncrement: false,
+  });
+
+  useEffect(() => {
+    startCountdown();
+  }, []);
 
   const phoneValidationSchema = Yup.object({
     mobileNumber: Yup.string()
@@ -167,14 +179,33 @@ export function LoginForm() {
                       </p>
                       <ErrorMessage name="otp" />
                     </div>
+                    {counter !== 0 && (
+                      <div className="flex gap-4 justify-center text-sm">
+                        <span className="text-gray-400">زمان باقی مانده:</span>
+                        <span className="[word-spacing: 30px] font-bold text-primary">
+                          {new Date(counter * 1000).toISOString().slice(14, 19)}
+                        </span>
+                      </div>
+                    )}
                     <div className="space-y-2">
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "در حال تایید..." : "تایید و ورود"}
-                      </Button>
+                      {counter !== 0 && (
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "در حال تایید..." : "تایید و ورود"}
+                        </Button>
+                      )}
+                      {counter === 0 && (
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? "در حال ارسال..." : "ارسال مجدد"}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="secondary"

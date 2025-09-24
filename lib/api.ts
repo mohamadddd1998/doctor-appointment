@@ -1,3 +1,5 @@
+import { httpService } from "./http-service";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export interface Appointment {
@@ -90,22 +92,19 @@ export const authApi = {
   },
 
   // register
-  register: async (payload: any) => {
-    const response = await fetch(
-      `${API_BASE_URL}/SeedData/CreateAccount/create`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": " multipart/form-data",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-    if (!response.ok) {
-      throw new Error("خطا در  ثبت نام");
-    }
-    return response.json();
-  },
+  // register: async (payload: any) => {
+  //   const response = await fetch(
+  //     `${API_BASE_URL}/SeedData/CreateAccount/create`,
+  //     {
+  //       method: "POST",
+  //       body: JSON.stringify(payload),
+  //     }
+  //   );
+  //   if (!response.ok) {
+  //     throw new Error("خطا در  ثبت نام");
+  //   }
+  //   return response.json();
+  // },
 
   // sendd-otp
   sendOtp: async (payload: any) => {
