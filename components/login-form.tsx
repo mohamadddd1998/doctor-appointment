@@ -1,11 +1,9 @@
 "use client";
 
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, FormikValues } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   InputOTP,
@@ -13,137 +11,137 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useAuth } from "@/lib/auth";
-import { AlertCircle, ArrowLeft, ClipboardCheck, RefreshCcw } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { useCaptcha } from "@/hooks/use-captcha";
-
-const phoneSchema = Yup.object({
-  phone: Yup.string()
-    .matches(/^09\d{9}$/, "شماره تلفن باید با 09 شروع شده و 11 رقم باشد")
-    .required("شماره تلفن الزامی است"),
-});
-
-const otpSchema = Yup.object({
-  otp: Yup.string()
-    .length(4, "کد تایید باید 4 رقم باشد")
-    .matches(/^\d{4}$/, "کد تایید باید فقط شامل اعداد باشد")
-    .required("کد تایید الزامی است"),
-});
+import Link from "next/link";
+import Captcha from "./partials/captcha";
+import { authApi } from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import TextInputField from "./partials/text-input-field";
+import ErrorMessage from "./partials/error-message";
 
 export function LoginForm() {
-  const { sendOTP, verifyOTP, isLoading } = useAuth();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const { isLoading } = useAuth();
+  const [step, setStep] = useState<"mobile" | "otp">("mobile");
   const router = useRouter();
-  const data = useCaptcha()
-  console.log(data , 'data');
-  
+
+  const phoneValidationSchema = Yup.object({
+    mobileNumber: Yup.string()
+      .matches(/^09\d{9}$/, "شماره تلفن باید با 09 شروع شده و 11 رقم باشد")
+      .required("شماره تلفن الزامی است"),
+  });
+
+  const otpValidationSchema = Yup.object({
+    otp: Yup.string()
+      .length(4, "کد تایید باید 4 رقم باشد")
+      .matches(/^\d{4}$/, "کد تایید باید فقط شامل اعداد باشد")
+      .required("کد تایید الزامی است"),
+  });
+
+  const sendotpMutation = useMutation({
+    mutationFn: authApi.sendOtp,
+    onSuccess: () => {
+      toast.success("ورود با موفقیت انجام شد");
+      router.push("/admin");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "خطا در ورود ");
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onSuccess: () => {
+      toast.success(" کد تایید ارسال شد .");
+      setStep("otp");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "خطا در  ارسال کد تایید");
+    },
+  });
+
+  const submitHandler = (values: FormikValues) => {
+    if (step === "mobile") {
+      loginMutation.mutate({
+        mobileNumber: values?.mobileNumber,
+        captcha: values?.captcha,
+      });
+    }
+    if (step === "otp") {
+      sendotpMutation.mutate({
+        phoneNumber: values?.mobileNumber,
+        otp: values?.otp,
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg border-none">
         <CardHeader className="text-center">
-          <CardTitle className="font-bold text-xl flex flex-col items-center gap-4">
-            <img src={'/logo.png'} className="w-72" />
+          <CardTitle className="font-bold text-sm text-gray-500 flex flex-col items-center">
+            <img src={"/logo.png"} className="w-72" />
             ورود به پنل نوبت دهی
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Formik
             initialValues={{
-              phone: "",
+              mobileNumber: "",
               otp: "",
-              error: "",
             }}
             validateOnBlur={false}
             validateOnChange={false}
             validationSchema={() =>
-              step === "phone" ? phoneSchema : otpSchema
+              step === "mobile" ? phoneValidationSchema : otpValidationSchema
             }
-            onSubmit={async (values, { setFieldValue, setFieldError }) => {
-              if (step === "phone") {
-                const success = await sendOTP(values.phone);
-                if (success) {
-                  setStep("otp");
-                  setFieldValue("error", "");
-                } else {
-                  setFieldError("phone", "شماره تلفن نامعتبر است");
-                }
-              } else {
-                const success = await verifyOTP(values.phone, values.otp);
-                if (success) {
-                  router.push("/admin");
-                } else {
-                  setFieldError("otp", "کد تایید اشتباه است");
-                }
-              }
-            }}
+            onSubmit={submitHandler}
           >
             {({ values, errors, touched, setFieldValue }) => (
-              <Form className="space-y-4">
-                {step === "phone" && (
+              <Form className="space-y-6">
+                {step === "mobile" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">شماره تلفن : </Label>
-                      <Field name="phone">
-                        {({ field }: any) => (
-                          <Input
-                            {...field}
-                            id="phone"
-                            type="tel"
-                            dir="ltr"
-                            maxLength={11}
-                          />
-                        )}
-                      </Field>
-                      {errors.phone && touched.phone && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.phone}
-                        </div>
-                      )}
+                      <TextInputField
+                        name="mobileNumber"
+                        label="شماره تلفن"
+                        type="number"
+                        dir="ltr"
+                        maxLength={11}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Field name="captcha">
-                        {({ field }: any) => (
-                          <div className="relative flex items-center gap-2">
-                            <Input
-                              {...field}
-                              id="phone"
-                              type="tel"
-                              dir="ltr"
-                              maxLength={11}
-                              className=" flex-1 placeholder:text-[10px] placeholder:text-right"
-                              placeholder="حاصل جمع اعداد را وارد نمایید"
-                            />
-                            <div className=" top-0 left-0 h-9 flex gap-2 items-center shrink-0">
-                              <img src="/captcha.PNG" className="h-full" />
-                               <RefreshCcw size={20} className="text-primary cursor-pointer" />
-                            </div>
-                          </div>
-                        )}
+                        {({ field }: any) => <Captcha field={field} />}
                       </Field>
-
-                      {errors.phone && touched.phone && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.phone}
-                        </div>
-                      )}
+                      <ErrorMessage name="captcha" />
                     </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        "در حال ارسال..."
-                      ) : (
-                        <>
-                          ارسال کد تایید
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex flex-col items-center gap-4">
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={loginMutation.isPending}
+                      >
+                        {loginMutation.isPending ? (
+                          "در حال ارسال..."
+                        ) : (
+                          <>
+                            ارسال کد تایید
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs">
+                        ثبت نام نکرده ام ؟{" "}
+                        <Link
+                          href={"/register"}
+                          className="font-bold text-primary"
+                        >
+                          ثبت نام
+                        </Link>
+                      </p>
+                    </div>
                   </>
                 )}
 
@@ -165,14 +163,9 @@ export function LoginForm() {
                         </InputOTP>
                       </div>
                       <p className="text-sm text-muted-foreground text-center">
-                        کد تایید به شماره {values.phone} ارسال شد.
+                        کد تایید به شماره {values.mobileNumber} ارسال شد.
                       </p>
-                      {errors.otp && touched.otp && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.otp}
-                        </div>
-                      )}
+                      <ErrorMessage name="otp" />
                     </div>
                     <div className="space-y-2">
                       <Button
@@ -187,9 +180,8 @@ export function LoginForm() {
                         variant="secondary"
                         className="w-full border-none"
                         onClick={() => {
-                          setStep("phone");
+                          setStep("otp");
                           setFieldValue("otp", "");
-                          setFieldValue("error", "");
                         }}
                         disabled={isLoading}
                       >

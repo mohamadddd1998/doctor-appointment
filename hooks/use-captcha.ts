@@ -1,4 +1,3 @@
-// useCaptcha.ts
 import { useQuery } from "@tanstack/react-query";
 
 type CaptchaApiResponse = {
@@ -6,25 +5,22 @@ type CaptchaApiResponse = {
   data: {
     key: string;
     imageBase64: string;
-    expiresAt: string; // ISO string, e.g. "2025-09-23T19:24:15.2002927Z"
+    expiresAt: string;
   };
   code: number;
 };
 
 export type Captcha = {
   key: string;
-  imageUrl: string; // data:image/png;base64,...
+  imageUrl: string;
 };
 
-const CAPTCHA_URL = "/Account/GenerateCaptcha"; // آدرس API رو اینجا بذارید یا از param بفرستید
+const CAPTCHA_URL = "/Account/GenerateCaptcha";
 
-async function fetchCaptcha(signal?: AbortSignal): Promise<CaptchaApiResponse> {
+async function fetchCaptcha(): Promise<CaptchaApiResponse> {
   console.log(process.env.NEXT_PUBLIC_API_BASE_URL, "process.env.BASE_URL");
 
-  const res = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + CAPTCHA_URL, {
-    method: "GET",
-    signal,
-  });
+  const res = await fetch(process.env.NEXT_PUBLIC_API_BASE_URL + CAPTCHA_URL);
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to fetch captcha: ${res.status} ${text}`);
@@ -36,8 +32,8 @@ async function fetchCaptcha(signal?: AbortSignal): Promise<CaptchaApiResponse> {
 export function useCaptcha() {
   const query = useQuery({
     queryKey: ["captcha"],
-    queryFn: async ({ signal }) => {
-      const body = await fetchCaptcha(signal);
+    queryFn: async () => {
+      const body = await fetchCaptcha();
       if (!body.success || !body.data)
         throw new Error("Invalid captcha response");
       const { key, imageBase64 } = body.data;

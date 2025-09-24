@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export interface Appointment {
   date: string;
@@ -69,5 +69,56 @@ export const appointmentsApi = {
     if (!response.ok) {
       throw new Error("خطا در حذف نوبت");
     }
+  },
+};
+
+// Auth API
+export const authApi = {
+  // login
+  login: async (payload: any) => {
+    const response = await fetch(`${API_BASE_URL}/SeedData/Login/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error("خطا در  ورود");
+    }
+    return response.json();
+  },
+
+  // register
+  register: async (payload: any) => {
+    const response = await fetch(
+      `${API_BASE_URL}/SeedData/CreateAccount/create`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": " multipart/form-data",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    if (!response.ok) {
+      throw new Error("خطا در  ثبت نام");
+    }
+    return response.json();
+  },
+
+  // sendd-otp
+  sendOtp: async (payload: any) => {
+    const response = await fetch(`${API_BASE_URL}/Test/SendOtp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error("خطا در  ارسال کد");
+    }
+    return response.json();
   },
 };

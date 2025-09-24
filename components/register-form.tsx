@@ -1,27 +1,13 @@
 "use client";
 
-import { Formik, Form, Field } from "formik";
+import { Formik, Form, Field, FormikValues } from "formik";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { useAuth } from "@/lib/auth";
-import {
-  AlertCircle,
-  ArrowLeft,
-  CalendarIcon,
-  ClipboardCheck,
-  RefreshCcw,
-} from "lucide-react";
-import { useState } from "react";
-import { useCaptcha } from "@/hooks/use-captcha";
+import { ArrowLeft } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,308 +15,160 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { cn } from "@/lib/utils";
-import { Calendar } from "./ui/calendar";
-import { format } from "date-fns";
-import { PersianCalendar } from "./ui/persian-calendar";
-
-const phoneSchema = Yup.object({
-  phone: Yup.string()
-    .matches(/^09\d{9}$/, "شماره تلفن باید با 09 شروع شده و 11 رقم باشد")
-    .required("شماره تلفن الزامی است"),
-});
-
-const otpSchema = Yup.object({
-  otp: Yup.string()
-    .length(4, "کد تایید باید 4 رقم باشد")
-    .matches(/^\d{4}$/, "کد تایید باید فقط شامل اعداد باشد")
-    .required("کد تایید الزامی است"),
-});
+import Link from "next/link";
+import Captcha from "./partials/captcha";
+import { toast } from "sonner";
+import TextInputField from "./partials/text-input-field";
+import ErrorMessage from "./partials/error-message";
+import { register } from "@/actions/auth";
 
 export function RegisterForm() {
-  const { sendOTP, verifyOTP, isLoading } = useAuth();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const { isLoading } = useAuth();
   const router = useRouter();
-  const data = useCaptcha();
-  console.log(data, "data");
 
+  const validationSchema = Yup.object({
+    mobileNumber: Yup.string()
+      .matches(/^09\d{9}$/, "شماره تلفن باید با 09 شروع شده و 11 رقم باشد")
+      .required("شماره تلفن الزامی است"),
+    firstName: Yup.string().required(" نام الزامی است"),
+    lastName: Yup.string().required(" نام خانوادگی الزامی است"),
+    nationalCode: Yup.string()
+      .required("لطفا کدملی را وارد نمایید")
+      .min(10, "کد ملی باید 10 رقم باشد"),
+    password: Yup.string()
+      .required("رمز عبور را وارد نمایید")
+      .min(8, "رمز عبور باید حداقل 8 کاراکتر باشد.")
+      .matches(/[a-z]+/, "رمز عبور باید شامل حداقل  یک حرف کوچک انگلیسی باشد.")
+      .matches(/[A-Z]+/, "رمز عبور باید شامل حداقل  یک حرف بزرگ انگلیسی باشد.")
+      .matches(
+        /[@$!%*#?&]+/,
+        "رمز عبور باید شامل حداقل یک کاراکتر خاص (@ یا $ یا ! یا % یا * یا # یا ? یا &) باشد."
+      )
+      .matches(/\d+/, "رمز عبور باید حداقل شامل یک عدد باشد."),
+    captcha: Yup.string().required(" کپچا الزامی است"),
+  });
+
+  const submitHandler = async (values: FormikValues) => {
+    console.log(values, "values");
+
+    const payload = {
+      firstName: values?.firstName,
+      lastName: values?.lastName,
+      nationalCode: values?.nationalCode?.toString(),
+      mobileNumber: "0" + values?.mobileNumber?.toString(),
+      gender: Number(values?.gender),
+      captcha: values?.captcha,
+    };
+    try {
+      const result = (await register(payload)) as any;
+      if (result?.success) {
+        toast.success("ثبت نام با موفقیت انجام شد");
+        router.push("/login");
+        return;
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
-          <CardTitle className="font-bold text-gray-500 text-xl flex flex-col items-center gap-4">
+          <CardTitle className="font-bold text-gray-500 text-sm flex flex-col items-center">
             <img src={"/logo.png"} className="w-72" />
-            {/* ثبت نام */}
+            ثبت نام در پنل نوبت دهی
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Formik
             initialValues={{
-              phone: "",
-              otp: "",
-              gender: "",
-              error: "",
-              password: '',
-              date: undefined as Date | undefined,
+              firstName: "",
+              lastName: "",
+              nationalCode: "",
+              mobileNumber: "",
+              gender: "1",
+              captcha: "",
             }}
             validateOnBlur={false}
             validateOnChange={false}
-            validationSchema={() =>
-              step === "phone" ? phoneSchema : otpSchema
-            }
-            onSubmit={async (values, { setFieldValue, setFieldError }) => {
-              if (step === "phone") {
-                const success = await sendOTP(values.phone);
-                if (success) {
-                  setStep("otp");
-                  setFieldValue("error", "");
-                } else {
-                  setFieldError("phone", "شماره تلفن نامعتبر است");
-                }
-              } else {
-                const success = await verifyOTP(values.phone, values.otp);
-                if (success) {
-                  router.push("/admin");
-                } else {
-                  setFieldError("otp", "کد تایید اشتباه است");
-                }
-              }
-            }}
+            // validationSchema={validationSchema}
+            onSubmit={submitHandler}
           >
-            {({ values, errors, touched, setFieldValue }) => (
-              <Form className="space-y-4">
-                {step === "phone" && (
-                  <>
-                    <div className="flex gap-2">
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="firstName"> نام : </Label>
-                        <Field name="firstName">
-                          {({ field }: any) => (
-                            <Input {...field} id="firstName" />
-                          )}
-                        </Field>
-                        {errors.phone && touched.phone && (
-                          <div className="flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.phone}
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="lastName"> نام خانوادگی : </Label>
-                        <Field name="lastName">
-                          {({ field }: any) => (
-                            <Input {...field} id="lastName" />
-                          )}
-                        </Field>
-                        {errors.phone && touched.phone && (
-                          <div className="flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.phone}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="mobileNumber ">شماره تلفن : </Label>
-                        <Field name="mobileNumber ">
-                          {({ field }: any) => (
-                            <Input
-                              {...field}
-                              id="mobileNumber"
-                              type="tel"
-                              dir="ltr"
-                              maxLength={11}
-                            />
-                          )}
-                        </Field>
-                        {errors.phone && touched.phone && (
-                          <div className="flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.phone}
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="fatherName"> نام پدر : </Label>
-                        <Field name="fatherName">
-                          {({ field }: any) => (
-                            <Input {...field} id="fatherName" />
-                          )}
-                        </Field>
-                        {errors.phone && touched.phone && (
-                          <div className="flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.phone}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="gender"> جنسیت :</Label>
-                        <Select
-                          value={values.gender}
-                          onValueChange={(value) =>
-                            setFieldValue("gender", value)
-                          }
-                          dir="rtl"
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[
-                              { value: "0", label: "زن" },
-                              { value: "1", label: "مرد" },
-                            ].map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.gender && touched.gender && (
-                          <p className="text-sm text-destructive">
-                            {errors.gender}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2 w-1/2">
-                        <Label htmlFor="date">تاریخ تولد :</Label>
-                        <PersianCalendar
-                          value={values.date}
-                          onChange={(date) => setFieldValue("date", date)}
-                        />
-                        {errors.date && touched.date && (
-                          <p className="text-sm text-destructive">
-                            {errors.date}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password ">رمز عبور : </Label>
-                      <Field name="password ">
-                        {({ field }: any) => (
-                          <Input
-                            {...field}
-                            id="password"
-                            type="password"
-                            dir="ltr"
-                          />
-                        )}
-                      </Field>
-                      {errors.phone && touched.phone && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.phone}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Field name="captcha">
-                        {({ field }: any) => (
-                          <div className="relative flex items-center gap-2">
-                            <Input
-                              {...field}
-                              id="phone"
-                              className=" flex-1 placeholder:text-[10px] placeholder:text-right"
-                              placeholder="حاصل جمع اعداد را وارد نمایید"
-                            />
-                            <div className=" top-0 left-0 h-9 flex gap-2 items-center shrink-0">
-                              <img src="/captcha.PNG" className="h-full" />
-                              <RefreshCcw
-                                size={20}
-                                className="text-primary cursor-pointer"
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </Field>
-
-                      {errors.phone && touched.phone && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.phone}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        "در حال ارسال..."
-                      ) : (
-                        <>
-                          ارسال کد تایید
-                          <ArrowLeft className="mr-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </>
-                )}
-
-                {step === "otp" && (
-                  <>
-                    <div className="space-y-2">
-                      <div className="flex justify-center">
-                        <InputOTP
-                          maxLength={4}
-                          value={values.otp}
-                          onChange={(value) => setFieldValue("otp", value)}
-                        >
-                          <InputOTPGroup className="flex-row-reverse">
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </div>
-                      <p className="text-sm text-muted-foreground text-center">
-                        کد تایید به شماره {values.phone} ارسال شد.
-                      </p>
-                      {errors.otp && touched.otp && (
-                        <div className="flex items-center gap-2 text-destructive text-sm">
-                          <AlertCircle className="h-4 w-4" />
-                          {errors.otp}
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? "در حال تایید..." : "تایید و ورود"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="w-full border-none"
-                        onClick={() => {
-                          setStep("phone");
-                          setFieldValue("otp", "");
-                          setFieldValue("error", "");
-                        }}
-                        disabled={isLoading}
-                      >
-                        بازگشت به مرحله قبل
-                        <ArrowLeft className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </>
-                )}
+            {({ values, setFieldValue }) => (
+              <Form className="space-y-6">
+                <div className="flex gap-2">
+                  <div className="space-y-2 w-1/2">
+                    <TextInputField name="firstName" label="نام" />
+                  </div>
+                  <div className="space-y-2 w-1/2">
+                    <TextInputField name="lastName" label="نام خانوادگی" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="space-y-2 w-1/2">
+                    <TextInputField
+                      name="nationalCode"
+                      label="کد ملی"
+                      type="number"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2 w-1/2">
+                    <TextInputField
+                      name="mobileNumber"
+                      label="شماره تلفن"
+                      type="number"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender"> جنسیت </Label>
+                  <Select
+                    value={values.gender}
+                    onValueChange={(value) => setFieldValue("gender", value)}
+                    dir="rtl"
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[
+                        { value: "0", label: "مرد" },
+                        { value: "1", label: "زن" },
+                      ].map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <ErrorMessage name="gender" />
+                </div>
+                <div className="space-y-2">
+                  <Field name="captcha">
+                    {({ field }: any) => <Captcha field={field} />}
+                  </Field>
+                  <ErrorMessage name="captcha" />
+                </div>
+                <div className="flex flex-col items-center gap-4">
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      "در حال ثبت نام..."
+                    ) : (
+                      <>
+                        ثبت نام
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-xs">
+                    قبلا ثبت نام کرده ام ؟{" "}
+                    <Link href={"/login"} className="font-bold text-primary">
+                      ورود
+                    </Link>
+                  </p>
+                </div>
               </Form>
             )}
           </Formik>
