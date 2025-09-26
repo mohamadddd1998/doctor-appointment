@@ -24,7 +24,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 
 export function LoginForm() {
   const { isLoading } = useAuth();
-  const [step, setStep] = useState<"mobile" | "otp">("otp");
+  const [step, setStep] = useState<"mobile" | "otp">("mobile");
   const router = useRouter();
 
   const [counter, { startCountdown, resetCountdown }] = useCountdown({

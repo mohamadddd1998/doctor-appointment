@@ -1,4 +1,5 @@
 "use server";
+import { handleApiError } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -15,14 +16,7 @@ export const login = async (payload: any) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      let errText = "";
-      Object.keys(errorData.errors).forEach((key: string, index: number) => {
-        errText += errorData.errors[key].join(" - ");
-        errText +=
-          Object.keys(errorData.errors).length === index + 1 ? "  " : " - ";
-      });
-      throw new Error(`${errText || `خطا در ثبت نام - ${response.status}`}`);
+      await handleApiError(response);
     }
     return await response.json();
   } catch (error: any) {

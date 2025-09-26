@@ -122,7 +122,7 @@ export function RegisterForm() {
             }}
             validateOnBlur={false}
             validateOnChange={false}
-            // validationSchema={validationSchema}
+            validationSchema={validationSchema}
             onSubmit={submitHandler}
           >
             {({ values, setFieldValue }) => (
