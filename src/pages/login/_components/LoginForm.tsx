@@ -1,4 +1,4 @@
-import { Formik, Form, Field, type FormikValues } from "formik";
+import { Formik, Form, type FormikValues } from "formik";
 import * as Yup from "yup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,10 +9,11 @@ import Captcha from "@/components/partials/captcha";
 import { useAuth } from "@/providers/AuthProvider";
 import TextField from "@/components/partials/formik-fields/text-field";
 import { post } from "@/services/http-service";
+import { useCaptcha } from "@/hooks/use-captcha";
 
 const LoginForm = () => {
   const { setStep, setData } = useAuth();
-
+  const captcha = useCaptcha();
   const validationSchema = Yup.object({
     phoneNumber: Yup.string()
       .required("تلفن همراه را وارد نمایید ")
@@ -27,6 +28,7 @@ const LoginForm = () => {
       setStep("otp");
     },
     onError: (error: Error) => {
+      captcha.refresh();
       toast.error(error.message || "خطا در  ارسال کد تایید");
     },
   });
@@ -36,7 +38,7 @@ const LoginForm = () => {
       {
         phoneNumber: values?.phoneNumber,
         code: values?.captcha,
-        key: values.key,
+        key: captcha.key,
       },
       {
         onSuccess: (result) =>
@@ -61,7 +63,6 @@ const LoginForm = () => {
           initialValues={{
             phoneNumber: "",
             captcha: "",
-            key: "",
           }}
           validateOnBlur={false}
           validateOnChange={false}
@@ -70,29 +71,19 @@ const LoginForm = () => {
         >
           {() => (
             <Form className="space-y-6">
-              <>
-                <div className="space-y-2">
-                  <TextField name="phoneNumber" label="تلفن همراه" dir="ltr" />
-                </div>
-                <div className="space-y-2">
-                  <Field name="captcha">
-                    {({ field }: any) => <Captcha field={field} />}
-                  </Field>
-                </div>
-                <div className="flex flex-col items-center gap-4">
-                  {loginMutation.isPending ? (
-                    <Button type="button" className="w-full">
-                      <Loader2Icon className="animate-spin" />
-                      در حال ارسال ...
-                    </Button>
-                  ) : (
-                    <Button type="submit" className="w-full">
-                      ارسال کد تایید
-                      <ArrowLeft className="mr-2 h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </>
+              <TextField name="phoneNumber" label="تلفن همراه" dir="ltr" />
+              <Captcha {...captcha} />
+              {loginMutation.isPending ? (
+                <Button type="button" className="w-full">
+                  <Loader2Icon className="animate-spin" />
+                  در حال ارسال ...
+                </Button>
+              ) : (
+                <Button type="submit" className="w-full">
+                  ارسال کد تایید
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                </Button>
+              )}
             </Form>
           )}
         </Formik>

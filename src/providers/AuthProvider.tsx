@@ -143,9 +143,8 @@ const useValidToken = (dispatch: React.Dispatch<TAuthAction>) => {
     queryFn: async () => await get("/Account/ValidateToken"),
   });
 
-  //تعیین وضعیت لاگین کاربر پس از چک توکن
-  useEffect(() => {
-    if (isSuccess) {
+  useEffect(() => {  
+    if (isSuccess && data) {
       dispatch({
         type: AuthActionTypes.Set_IsLogin,
         value: data?.data as boolean,

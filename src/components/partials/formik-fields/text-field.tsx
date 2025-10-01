@@ -10,8 +10,10 @@ interface TextFieldProps {
 }
 const TextField = ({ name, label, ...rest }: TextFieldProps) => {
   return (
-    <>
-      <Label htmlFor={name} className="label"> {label} </Label>
+    <div className="space-y-2">
+      <Label htmlFor={name} className="label">
+        {label}{" "}
+      </Label>
       <Field name={name}>
         {({ field }: any) => <Input {...field} {...rest} id={name} />}
       </Field>
@@ -23,7 +25,7 @@ const TextField = ({ name, label, ...rest }: TextFieldProps) => {
           </div>
         )}
       </ErrorMessage>
-    </>
+    </div>
   );
 };
 export default TextField;
