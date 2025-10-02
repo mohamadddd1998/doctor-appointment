@@ -25,7 +25,6 @@ import { post } from "@/services/http-service";
 const OtpForm = () => {
   const formikRef = useRef<FormikProps<any>>(null);
   const {
-    setIsLogin,
     setStep,
     state: { data },
   } = useAuth();
