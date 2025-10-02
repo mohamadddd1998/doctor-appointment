@@ -13,7 +13,7 @@ import { useCaptcha } from "@/hooks/use-captcha";
 
 const LoginForm = () => {
   const { setStep, setData } = useAuth();
-  const captcha = useCaptcha();
+  const { key, ...captcha } = useCaptcha();
   const validationSchema = Yup.object({
     phoneNumber: Yup.string()
       .required("تلفن همراه را وارد نمایید ")
@@ -38,14 +38,18 @@ const LoginForm = () => {
       {
         phoneNumber: values?.phoneNumber,
         code: values?.captcha,
-        key: captcha.key,
+        key,
       },
       {
         onSuccess: (result) =>
-          setData({
+        {
+          console.log(result , 'r');
+          
+            setData({
             phoneNumber: values?.phoneNumber,
-            haveRegistered: result?.data?.data?.haveRegistered,
-          }),
+            haveRegistered: result?.data?.haveRegistered,
+          })
+        }
       }
     );
   };

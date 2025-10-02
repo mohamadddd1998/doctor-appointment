@@ -1,5 +1,7 @@
 import { useAuth } from "@/providers/AuthProvider";
 import LoginForm from "./_components/LoginForm";
+import OtpForm from "./_components/OtpForm";
+import RegisterForm from "./_components/RegisterForm";
 
 const Login = () => {
   const {
@@ -11,9 +13,9 @@ const Login = () => {
       case "login":
         return <LoginForm />;
       case "otp":
-        return <h1>otp</h1>;
+        return <OtpForm />;
       case "register":
-        return <h1>register</h1>;
+        return <RegisterForm />;
       default:
         return null;
     }

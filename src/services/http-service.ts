@@ -34,7 +34,7 @@ http.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      if (error.response.status > 399) {
+      if (error.response.status === 400) {
         const errorData: ErrorResponse = error?.response?.data;
         if (errorData?.errors) {
           Object.values(errorData.errors).forEach((errorArray) => {
@@ -45,6 +45,9 @@ http.interceptors.response.use(
         } else {
           toast.error(error?.message);
         }
+      }
+      if (error.response.status === 500) {
+        toast.error(error?.response?.data?.data);
       }
     }
     return Promise.reject(error);

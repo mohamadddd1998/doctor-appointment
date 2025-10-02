@@ -4,7 +4,7 @@ import { Skeleton } from "../ui/skeleton";
 import { ErrorMessage, Field } from "formik";
 import type { QueryObserverResult } from "@tanstack/react-query";
 
-type Captcha = {
+type Captcha = { 
   key: string;
   imageUrl: string;
 };
@@ -14,7 +14,6 @@ interface CaptchaProps {
   refresh: () => Promise<QueryObserverResult<Captcha | null, Error>>;
   isFetching: boolean;
   isLoading: boolean;
-  key: string | null;
 }
 
 const Captcha = (props: CaptchaProps) => {

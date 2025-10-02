@@ -5,29 +5,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2Icon } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
 import TextField from "@/components/partials/formik-fields/text-field";
 import { useAuth } from "@/providers/AuthProvider";
 import SelectField from "@/components/partials/formik-fields/select-field";
 import { Gender } from "@/services/enums";
 import { post } from "@/services/http-service";
+import { LSService } from "@/services/ls-service";
 
 const RegisterForm = () => {
   const {
-    setIsLogin,
     state: { data },
   } = useAuth();
-  const navigate = useNavigate();
 
   const validationSchema = Yup.object({});
 
   const registerMutation = useMutation({
     mutationFn: async (payload: any) =>
       await post("/Account/register", payload),
-    onSuccess: () => {
+    onSuccess: (result: any) => {
       toast.success("ثبت نام  با موفقیت انجام شد");
-      setIsLogin(true);
-      navigate("/");
+      LSService.setToken(result?.data?.accessToken);
+      window.location.href = '/'
     },
     onError: (error: Error) => {
       toast.error(error.message || "خطا در ثبت نام ");
@@ -38,7 +36,7 @@ const RegisterForm = () => {
     registerMutation.mutate({
       firstName: values.firstName,
       lastName: values.lastName,
-      nationalCode: values.nationalCode,
+      nationalCode: values.nationalCode.toString(),
       phoneNumber: data?.phoneNumber,
       gender: Number(values?.gender),
     });

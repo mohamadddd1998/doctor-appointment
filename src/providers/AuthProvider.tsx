@@ -119,7 +119,7 @@ const useUserInfo = (
 ) => {
   const { data, isLoading, isSuccess } = useQuery({
     queryKey: ["userInfo", state.isLogin],
-    queryFn: async () => await get("/Account/userInfo"),
+    queryFn: async () => await get("/Account/GetCurrentUserInfo"),
     enabled: Boolean(state.isLogin),
   });
 
@@ -127,7 +127,7 @@ const useUserInfo = (
     if (isSuccess) {
       dispatch({
         type: AuthActionTypes.Set_User_Info,
-        value: data,
+        value: data?.data,
       });
     }
   }, [data]);
@@ -143,7 +143,7 @@ const useValidToken = (dispatch: React.Dispatch<TAuthAction>) => {
     queryFn: async () => await get("/Account/ValidateToken"),
   });
 
-  useEffect(() => {  
+  useEffect(() => {
     if (isSuccess && data) {
       dispatch({
         type: AuthActionTypes.Set_IsLogin,

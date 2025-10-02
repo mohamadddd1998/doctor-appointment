@@ -22,7 +22,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { LSService } from "@/services/ls-service";
 import { post } from "@/services/http-service";
 
-const LoginForm = () => {
+const OtpForm = () => {
   const formikRef = useRef<FormikProps<any>>(null);
   const {
     setIsLogin,
@@ -31,7 +31,7 @@ const LoginForm = () => {
   } = useAuth();
   const [counter, { startCountdown, resetCountdown }] = useCountdown({
     countStart: 240,
-    intervalMs: 1000,
+    intervalMs: 100,
     countStop: 0,
     isIncrement: false,
   });
@@ -42,8 +42,8 @@ const LoginForm = () => {
 
   const validationSchema = Yup.object({
     otp: Yup.string()
-      .length(4, "کد تایید باید 4 رقم باشد")
-      .matches(/^\d{4}$/, "کد تایید باید فقط شامل اعداد باشد")
+      .length(6, "کد تایید باید 6 رقم باشد")
+      .matches(/^\d{6}$/, "کد تایید باید فقط شامل اعداد باشد")
       .required("کد تایید الزامی است"),
   });
 
@@ -51,10 +51,10 @@ const LoginForm = () => {
     mutationFn: async (payload: any) =>
       await post("/Account/ConfirmOtp", payload),
     onSuccess: (result) => {
-      const _result = result?.data?.data;
+      const _result = result?.data;
       if (data?.haveRegistered) {
         if (_result.accessToken) {
-          setIsLogin(true);
+          window.location.href = '/'
           LSService.setToken(_result?.accessToken);
           toast.success("ورود با موفقیت انجام شد");
         } else {
@@ -75,9 +75,9 @@ const LoginForm = () => {
   const resendOtpMutation = useMutation({
     mutationFn: async (payload: any) =>
       await post("/Account/GenerateOtp", payload),
-    onSuccess: async () => {
-      await resetCountdown();
-      await startCountdown();
+    onSuccess: () => {
+      resetCountdown();
+      startCountdown();
       toast.success(`کد تایید به تلفن همراه شما ارسال شد.`);
     },
     onError: (error: Error) => {
@@ -128,7 +128,7 @@ const LoginForm = () => {
               <div className="space-y-2">
                 <div className="flex justify-center">
                   <InputOTP
-                    maxLength={4}
+                    maxLength={6}
                     value={values.otp}
                     onChange={(value) => setFieldValue("otp", value)}
                   >
@@ -137,6 +137,8 @@ const LoginForm = () => {
                       <InputOTPSlot index={1} />
                       <InputOTPSlot index={2} />
                       <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
@@ -203,4 +205,4 @@ const LoginForm = () => {
     </Card>
   );
 };
-export default LoginForm;
+export default OtpForm;
